@@ -1,7 +1,121 @@
 {{template "public/header" .}}
-    <h1>上传图片到 Telegram</h1><label for="uploadFile" id="uploadFileLabel" class="custom-file-label">选择图片</label> <input
-        type="file" name="image" id="uploadFile" accept=".jpg, .jpeg, .png" class="custom-file-input" multiple> <button
-        id="uploadButton">上传</button>
-    <div id="loading">上传中...</div>
-    <div id="response" class="ui-widget"></div>
+
+<style>
+  .upload-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .custom-file-input {
+    display: none;
+  }
+  .custom-file-label {
+    display: inline-block;
+    padding: 10px 20px;
+    background: #3498db;
+    color: #fff;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  .custom-file-label:hover {
+    background: #2980b9;
+  }
+  #uploadButton {
+    padding: 10px 20px;
+    margin-top: 10px;
+    background: #2ecc71;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  #uploadButton:hover {
+    background: #27ae60;
+  }
+  #loading {
+    display: none;
+    margin-top: 10px;
+    font-size: 0.9em;
+    color: #555;
+  }
+  #response {
+    margin-top: 10px;
+    width: 100%;
+    word-wrap: break-word;
+  }
+  .note {
+    margin-top: 10px;
+    font-size: 0.9em;
+    color: #e74c3c;
+  }
+  @media (max-width: 600px) {
+    .upload-container {
+      padding: 10px;
+    }
+    .custom-file-label,
+    #uploadButton {
+      width: 100%;
+      text-align: center;
+    }
+  }
+</style>
+
+<main class="upload-container">
+  <h1>上传图片到 Telegram</h1>
+  <label for="uploadFile" id="uploadFileLabel" class="custom-file-label">选择图片</label>
+  <input type="file" name="image" id="uploadFile" accept=".jpg, .jpeg, .png" class="custom-file-input" multiple>
+  <button id="uploadButton">上传</button>
+  <p class="note">请勿上传超过5MB的文件。</p>
+  <div id="loading">上传中...</div>
+  <div id="response" class="ui-widget"></div>
+</main>
+
+<script>
+  const uploadFile = document.getElementById('uploadFile');
+  const uploadLabel = document.getElementById('uploadFileLabel');
+  const uploadButton = document.getElementById('uploadButton');
+  const loading = document.getElementById('loading');
+  const response = document.getElementById('response');
+
+  uploadFile.addEventListener('change', () => {
+    if (uploadFile.files.length) {
+      uploadLabel.textContent = Array.from(uploadFile.files).map(f => f.name).join(', ');
+      const tooLarge = Array.from(uploadFile.files).some(f => f.size > 5 * 1024 * 1024);
+      if (tooLarge) alert('请勿上传超过5MB的文件');
+    } else {
+      uploadLabel.textContent = '选择图片';
+    }
+  });
+
+  uploadButton.addEventListener('click', () => {
+    if (!uploadFile.files.length) return alert('请选择文件');
+    const tooLarge = Array.from(uploadFile.files).some(f => f.size > 5 * 1024 * 1024);
+    if (tooLarge) return alert('请勿上传超过5MB的文件');
+
+    const formData = new FormData();
+    Array.from(uploadFile.files).forEach(f => formData.append('image', f));
+
+    loading.style.display = 'block';
+    fetch('', {
+      method: 'POST',
+      body: formData
+    })
+      .then(res => res.json())
+      .then(data => {
+        response.textContent = JSON.stringify(data, null, 2);
+      })
+      .catch(err => {
+        response.textContent = '上传失败';
+      })
+      .finally(() => {
+        loading.style.display = 'none';
+      });
+  });
+</script>
+
 {{template "public/footer" .}}
