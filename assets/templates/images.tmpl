@@ -1,152 +1,54 @@
+{{define "public/images"}}
 {{template "public/header" .}}
-
-<style>
-  /* 全局样式重置 */
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: "Helvetica Neue", Arial, sans-serif; background: #f0f2f5; color: #333; }
-
-  .upload-container {
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 30px 20px;
-    max-width: 600px;
-    margin: 40px auto;
-    transition: transform 0.3s;
-  }
-  .upload-container:hover { transform: translateY(-4px); }
-
-  h1 {
-    font-size: 1.8rem;
-    margin-bottom: 20px;
-    color: #2c3e50;
-  }
-
-  .custom-file-input {
-    display: none;
-  }
-  .custom-file-label {
-    display: inline-flex;
-    align-items: center;
-    padding: 12px 24px;
-    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-    color: #fff;
-    font-weight: bold;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background 0.3s;
-  }
-  .custom-file-label:hover {
-    background: linear-gradient(135deg, #5a0eb8 0%, #1e65e0 100%);
-  }
-
-  #uploadButton {
-    padding: 12px 30px;
-    margin-top: 15px;
-    background: #27ae60;
-    color: #fff;
-    font-weight: bold;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background 0.3s, transform 0.2s;
-  }
-  #uploadButton:hover {
-    background: #219150;
-    transform: translateY(-2px);
-  }
-  #uploadButton:active { transform: translateY(0); }
-
-  .note {
-    margin-top: 10px;
-    font-size: 0.9em;
-    color: #e74c3c;
-  }
-
-  #loading {
-    display: none;
-    margin-top: 15px;
-    font-size: 1em;
-    color: #555;
-    animation: blink 1.2s infinite;
-  }
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
-
-  #response {
-    margin-top: 20px;
-    width: 100%;
-    padding: 15px;
-    background: #f9f9f9;
-    border-radius: 6px;
-    font-family: monospace;
-    white-space: pre-wrap;
-    word-break: break-all;
-  }
-
-  @media (max-width: 600px) {
-    .upload-container {
-      margin: 20px 10px;
-      padding: 20px;
-    }
-    .custom-file-label, #uploadButton {
-      width: 100%;
-      justify-content: center;
-    }
-  }
-</style>
-
-<main class="upload-container">
-  <h1>上传图片到 Telegram</h1>
-  <label for="uploadFile" id="uploadFileLabel" class="custom-file-label">
-    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" style="margin-right:8px;"><path d="M.5 9.9V14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V9.9l-3.5-3.5-2.3 2.3L8 5.793 5.3 8.7l-2.3-2.3L.5 9.9z"/><path d="M7.5 5.5V.5h1v5h2l-2.5 2.5L5 5.5h2.5z"/></svg>
-    选择图片
-  </label>
-  <input type="file" name="image" id="uploadFile" accept=".jpg, .jpeg, .png" class="custom-file-input" multiple>
-  <button id="uploadButton">上传</button>
-  <p class="note">请勿上传超过5MB的文件。</p>
-  <div id="loading">上传中，请稍候...</div>
-  <div id="response" class="ui-widget"></div>
-</main>
-
-<script>
-  const uploadFile = document.getElementById('uploadFile');
-  const uploadLabel = document.getElementById('uploadFileLabel');
-  const uploadButton = document.getElementById('uploadButton');
-  const loading = document.getElementById('loading');
-  const response = document.getElementById('response');
-
-  uploadFile.addEventListener('change', () => {
-    if (uploadFile.files.length) {
-      uploadLabel.innerHTML = `已选择 ${uploadFile.files.length} 个文件`;
-      const tooLarge = Array.from(uploadFile.files).some(f => f.size > 5 * 1024 * 1024);
-      if (tooLarge) alert('请勿上传超过5MB的文件');
-    } else {
-      uploadLabel.innerHTML = `<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" fill=\"currentColor\" viewBox=\"0 0 16 16\" style=\"margin-right:8px;\"><path d=\"M.5 9.9V14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V9.9l-3.5-3.5-2.3 2.3L8 5.793 5.3 8.7l-2.3-2.3L.5 9.9z\"/><path d=\"M7.5 5.5V.5h1v5h2l-2.5 2.5L5 5.5h2.5z\"/></svg> 选择图片`;
-    }
-  });
-
-  uploadButton.addEventListener('click', () => {
-    if (!uploadFile.files.length) return alert('请选择文件');
-    const tooLarge = Array.from(uploadFile.files).some(f => f.size > 5 * 1024 * 1024);
-    if (tooLarge) return alert('请勿上传超过5MB的文件');
-
-    const formData = new FormData();
-    Array.from(uploadFile.files).forEach(f => formData.append('image', f));
-
-    loading.style.display = 'block';
-    response.textContent = '';
-    fetch('', { method: 'POST', body: formData })
-      .then(res => res.json())
-      .then(data => { response.textContent = JSON.stringify(data, null, 2); })
-      .catch(err => { response.textContent = '上传失败，请重试。'; })
-      .finally(() => { loading.style.display = 'none'; });
-  });
-</script>
-
+    <div class="warning-card">
+        <div class="warning-title">⚠️ 使用须知</div>
+        <ul class="warning-list">
+            <li>📏 单个图片文件大小不能超过 5MB</li>
+            <li>🚫 严禁上传违法、违规、色情、暴力等不当内容</li>
+            <li>⚖️ 请勿滥用本服务，恶意上传大量文件</li>
+            <li>🔒 我们保留删除不当内容的权利</li>
+            <li>📝 使用本服务即表示您同意遵守相关法律法规</li>
+        </ul>
+    </div>
+    <div class="main-card">
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📸</div>
+            <div class="upload-text">点击选择图片或拖拽到此处</div>
+            <div class="upload-hint">支持 JPG、PNG、GIF、WebP 格式，最大 5MB</div>
+            <input type="file" class="file-input" id="fileInput" accept="image/*" multiple>
+            <button class="upload-btn" id="uploadBtn">选择图片</button>
+        </div>
+        <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+        <div class="preview-area" id="previewArea"><h3>图片预览：</h3><img class="preview-image" id="previewImage" alt="预览图片"></div>
+        <div class="result-area" id="resultArea">
+            <h3>图片链接：</h3>
+            <input type="text" class="url-input" id="imageUrl" readonly>
+            <button class="copy-btn" id="copyBtn">复制链接</button>
+        </div>
+    </div>
+    <div class="features">
+        <div class="feature-card">
+            <div class="feature-icon">⚡</div>
+            <div class="feature-title">极速上传</div>
+            <div class="feature-desc">采用先进的CDN技术，确保图片上传和访问速度</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🔒</div>
+            <div class="feature-title">安全可靠</div>
+            <div class="feature-desc">多重安全防护，保障您的图片数据安全</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🌍</div>
+            <div class="feature-title">全球访问</div>
+            <div class="feature-desc">全球CDN节点，世界各地都能快速访问您的图片</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">💰</div>
+            <div class="feature-title">完全免费</div>
+            <div class="feature-desc">提供免费的图片托管服务，无隐藏费用</div>
+        </div>
+    </div>
 {{template "public/footer" .}}
+{{end}}
