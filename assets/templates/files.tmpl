@@ -1,6 +1,12 @@
+{{define "public/files"}}
 {{template "public/header" .}}
-    <h1>上传文件到 Telegram</h1><label for="uploadFile" id="uploadFileLabel" class="custom-file-label">选择文件</label> <input
-        type="file" name="image" id="uploadFile" class="custom-file-input" multiple> <button id="uploadButton">上传</button>
-    <div id="loading">上传中...</div>
-    <div id="response" class="ui-widget"></div>
+    <div class="main-card">
+        <h1>上传文件</h1>
+        <label for="uploadFile" id="uploadFileLabel" class="custom-file-label">选择文件</label>
+        <input type="file" name="file" id="uploadFile" class="file-input" multiple>
+        <button class="upload-btn" id="uploadBtn">上传文件</button>
+        <div id="loading" class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+        <div id="response" class="success-message"></div>
+    </div>
 {{template "public/footer" .}}
+{{end}}
